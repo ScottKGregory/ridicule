@@ -436,8 +436,7 @@ func (mock *{{ $interface.MockName }}) {{ $f.Name }}({{ formatParams $f.Params "
 		}
 	}
 	{{- end }}{{ if $f.Return }}
-	return 
-	{{- formatReturn $f.Return }}{{- end }}
+	return {{ formatReturn $f.Return }}{{- end }}
 }
 {{- end }}
 {{- end }}
