@@ -12,13 +12,16 @@ import (
 func TestParse(t *testing.T) {
 	testFileSrc := `package foo
 
-	import name "github.com/scottkgregory/name"
+	import (
+		name "github.com/scottkgregory/name"
+		"github.com/scottkgregory/gen"
+	)
 
 	type X interface {
 		Flavour() string
 	}
 
-	type Y interface {
+	type Y[T any] interface {
 		X
 		Name() name.Name
 		YYY(x int, y string, b bool) (int, error)
@@ -28,6 +31,9 @@ func TestParse(t *testing.T) {
 		CCCC(x []name.Name) (length *int, err error)
 		DDDD(x ...name.Name) (length *int, err error)
 		EEEE(x func(y int, z string) error) (length *int, err error)
+		FFFF(y T) error
+		GGGG(y T) map[string]T
+		HHHH(y T) gen.Generic[name.Name, string]
 	}
 	`
 
@@ -128,11 +134,41 @@ func TestParse(t *testing.T) {
 							{Name: "err", Type: "error"},
 						},
 					},
+					{
+						Name: "FFFF",
+						Params: []*Param{
+							{Name: "y", Type: "T"},
+						},
+						Return: []*Param{
+							{Name: "", Type: "error"},
+						},
+					},
+					{
+						Name: "GGGG",
+						Params: []*Param{
+							{Name: "y", Type: "T"},
+						},
+						Return: []*Param{
+							{Name: "", Type: "map[string]T"},
+						},
+					},
+					{
+						Name: "HHHH",
+						Params: []*Param{
+							{Name: "y", Type: "T"},
+						},
+						Return: []*Param{
+							{Name: "", Type: "gen.Generic[name.Name, string]"},
+						},
+					},
+				},
+				Generics: []*Param{
+					{Name: "T", Type: "any"},
 				},
 				Embedded: []string{"MockX"},
 			},
 		},
-		Imports: []string{"name \"github.com/scottkgregory/name\""},
+		Imports: []string{"name \"github.com/scottkgregory/name\"", "\"github.com/scottkgregory/gen\""},
 		Header:  false,
 	}
 
@@ -162,6 +198,7 @@ func TestParse(t *testing.T) {
 package foo
 
 import (
+	"github.com/scottkgregory/gen"
 	name "github.com/scottkgregory/name"
 	"github.com/stretchr/testify/mock"
 )
@@ -172,13 +209,10 @@ type MockX struct {
 }
 
 // MockY mocks the Y interface
-type MockY struct {
+type MockY[T any] struct {
 	mock.Mock
 	MockX
 }
-
-var _ X = &MockX{}
-var _ Y = &MockY{}
 
 // Flavour mocks the Flavour function
 func (mock *MockX) Flavour() (r0 string) {
@@ -195,7 +229,7 @@ func (mock *MockX) Flavour() (r0 string) {
 }
 
 // Name mocks the Name function
-func (mock *MockY) Name() (r0 name.Name) {
+func (mock *MockY[T]) Name() (r0 name.Name) {
 	args := mock.Called()
 
 	if args.Get(0) != nil {
@@ -209,7 +243,7 @@ func (mock *MockY) Name() (r0 name.Name) {
 }
 
 // YYY mocks the YYY function
-func (mock *MockY) YYY(x int, y string, b bool) (r0 int, r1 error) {
+func (mock *MockY[T]) YYY(x int, y string, b bool) (r0 int, r1 error) {
 	args := mock.Called(x, y, b)
 
 	if args.Get(0) != nil {
@@ -231,7 +265,7 @@ func (mock *MockY) YYY(x int, y string, b bool) (r0 int, r1 error) {
 }
 
 // ZZZ mocks the ZZZ function
-func (mock *MockY) ZZZ(x *int) (r0 int, r1 error) {
+func (mock *MockY[T]) ZZZ(x *int) (r0 int, r1 error) {
 	args := mock.Called(x)
 
 	if args.Get(0) != nil {
@@ -253,7 +287,7 @@ func (mock *MockY) ZZZ(x *int) (r0 int, r1 error) {
 }
 
 // AAAA mocks the AAAA function
-func (mock *MockY) AAAA(x *int) (r0 *int, r1 error) {
+func (mock *MockY[T]) AAAA(x *int) (r0 *int, r1 error) {
 	args := mock.Called(x)
 
 	if args.Get(0) != nil {
@@ -275,7 +309,7 @@ func (mock *MockY) AAAA(x *int) (r0 *int, r1 error) {
 }
 
 // BBBB mocks the BBBB function
-func (mock *MockY) BBBB(x map[string]*int) (r0 *int, r1 error) {
+func (mock *MockY[T]) BBBB(x map[string]*int) (r0 *int, r1 error) {
 	args := mock.Called(x)
 
 	if args.Get(0) != nil {
@@ -297,7 +331,7 @@ func (mock *MockY) BBBB(x map[string]*int) (r0 *int, r1 error) {
 }
 
 // CCCC mocks the CCCC function
-func (mock *MockY) CCCC(x []name.Name) (r0 *int, r1 error) {
+func (mock *MockY[T]) CCCC(x []name.Name) (r0 *int, r1 error) {
 	args := mock.Called(x)
 
 	if args.Get(0) != nil {
@@ -319,7 +353,7 @@ func (mock *MockY) CCCC(x []name.Name) (r0 *int, r1 error) {
 }
 
 // DDDD mocks the DDDD function
-func (mock *MockY) DDDD(x ...name.Name) (r0 *int, r1 error) {
+func (mock *MockY[T]) DDDD(x ...name.Name) (r0 *int, r1 error) {
 	args := mock.Called(x)
 
 	if args.Get(0) != nil {
@@ -341,7 +375,7 @@ func (mock *MockY) DDDD(x ...name.Name) (r0 *int, r1 error) {
 }
 
 // EEEE mocks the EEEE function
-func (mock *MockY) EEEE(x func(int, string) error) (r0 *int, r1 error) {
+func (mock *MockY[T]) EEEE(x func(int, string) error) (r0 *int, r1 error) {
 	args := mock.Called(x)
 
 	if args.Get(0) != nil {
@@ -360,6 +394,48 @@ func (mock *MockY) EEEE(x func(int, string) error) (r0 *int, r1 error) {
 		}
 	}
 	return r0, r1
+}
+
+// FFFF mocks the FFFF function
+func (mock *MockY[T]) FFFF(y T) (r0 error) {
+	args := mock.Called(y)
+
+	if args.Get(0) != nil {
+		argOk := false
+		r0, argOk = args.Get(0).(error)
+		if !argOk {
+			panic("incorrect type supplied for return value [0], expected error")
+		}
+	}
+	return r0
+}
+
+// GGGG mocks the GGGG function
+func (mock *MockY[T]) GGGG(y T) (r0 map[string]T) {
+	args := mock.Called(y)
+
+	if args.Get(0) != nil {
+		argOk := false
+		r0, argOk = args.Get(0).(map[string]T)
+		if !argOk {
+			panic("incorrect type supplied for return value [0], expected map[string]T")
+		}
+	}
+	return r0
+}
+
+// HHHH mocks the HHHH function
+func (mock *MockY[T]) HHHH(y T) (r0 gen.Generic[name.Name, string]) {
+	args := mock.Called(y)
+
+	if args.Get(0) != nil {
+		argOk := false
+		r0, argOk = args.Get(0).(gen.Generic[name.Name, string])
+		if !argOk {
+			panic("incorrect type supplied for return value [0], expected gen.Generic[name.Name, string]")
+		}
+	}
+	return r0
 }
 `
 
