@@ -2,7 +2,7 @@ module github.com/scottkgregory/ridicule
 
 go 1.23.0
 
-toolchain go1.24.5
+toolchain go1.27.1
 
 require (
 	github.com/stretchr/testify v1.10.0
